@@ -1,128 +1,134 @@
 package com.codelab.basics
 
-import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.codelab.basics.ui.theme.BasicsCodelabTheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             BasicsCodelabTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    //Greeting(Message("Android", "Jetpack Compose"))
-                    Conversation(messages = SampleData.conversationSample)
-                }
+                MyApp(modifier = Modifier.fillMaxSize())
             }
         }
     }
 }
 
-data class Message(val author: String, val body: String)
+@Composable
+private fun MyApp(
+    modifier: Modifier = Modifier
+) {
+    var shouldShowOnboarding by remember { mutableStateOf(true) }
+
+    Surface(modifier) {
+        if (shouldShowOnboarding) {
+            OnboardingScreen(onContinueClicked = {shouldShowOnboarding = false})
+        } else {
+            Greetings()
+        }
+    }
+}
 
 @Composable
-fun Greeting(msg: Message) {
-    //Text(text = "Hello $name!")
+fun OnboardingScreen(
+    modifier: Modifier = Modifier,
+    onContinueClicked: () -> Unit
+) {
 
-    Row(modifier = Modifier
-        .padding(all = 8.dp)
-        .fillMaxWidth()) {
-        Image(painter = painterResource(id = R.drawable.profile_picture),
-            contentDescription = "Contact Profile picture",
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .border(1.5.dp, MaterialTheme.colors.primary, CircleShape)
-        )
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Welcome to the Basics Codelab!")
+        Button(
+            modifier = Modifier.padding(vertical = 24.dp),
+            onClick = onContinueClicked
+        ) {
+            Text("Continue")
+        }
+    }
+}
 
-        Spacer(modifier = Modifier.width(8.dp))
 
-        var isExpanded by remember { mutableStateOf(false) }
+@Composable
+private fun Greetings(
+    modifier: Modifier = Modifier,
+    names: List<String> = listOf("World", "Compose")
+) {
+    Column(modifier = modifier.padding(vertical = 4.dp)) {
+        for (name in names) {
+            Greeting(name = name)
+        }
+    }
+}
 
-        // surfaceColor will be updated gradually from one color to the other
-        val surfaceColor by animateColorAsState(
-            if (isExpanded) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
-        )
+@Composable
+private fun Greeting(name: String) {
+    var expanded = remember {
+        mutableStateOf(false)
+    }
 
-        Column(modifier = Modifier.clickable { isExpanded = !isExpanded }) {
-            Text(
-                text = msg.author,
-                color = MaterialTheme.colors.secondary,
-                style = MaterialTheme.typography.subtitle1
-            )
+    var extraPadding = if (expanded.value) 48.dp else 0.dp
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                elevation = 1.dp,
-                color = surfaceColor,
-                modifier = Modifier.animateContentSize().padding(1.dp)
-            ) {
-                Text(
-                    text = msg.body,
-                    modifier = Modifier.padding(all = 4.dp),
-                    maxLines = if(isExpanded) Int.MAX_VALUE else 1,
-                    style = MaterialTheme.typography.body2
-                )
+    Surface(
+        color = MaterialTheme.colors.primary,
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+    ) {
+        Row(modifier = Modifier.padding(24.dp)) {
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(bottom = extraPadding)) {
+                Text(text = "Hello,")
+                Text(text = name)
             }
-        }
-    }
-}
-
-@Preview(name = "Light Mode", showBackground = true)
-@Preview(name = "Dark Mode", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
-@Composable
-fun DefaultPreview() {
-    BasicsCodelabTheme {
-        Surface() {
-            Greeting(
-                msg = Message("안드로이드", "젯팩 컴포즈")
-            )
-        }
-    }
-}
-
-@Composable
-fun Conversation(messages: List<Message>) {
-    LazyColumn {
-        items(messages) { message ->
-            Greeting(msg = message)
+            Button(onClick = { expanded.value = !expanded.value }) {
+                Text(if (expanded.value) "Show less" else "Show more")
+            }
         }
     }
 }
 
 @Preview
 @Composable
-fun PreviewConversation() {
-    BasicsCodelabTheme() {
-        Conversation(messages = SampleData.conversationSample)
+fun MyAppPreview() {
+    BasicsCodelabTheme {
+        MyApp(Modifier.fillMaxSize())
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320, heightDp = 320)
+@Composable
+fun OnboardingPreview() {
+    BasicsCodelabTheme {
+        OnboardingScreen(onContinueClicked = {})
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+private fun GreetingsPreview() {
+    BasicsCodelabTheme {
+        Greetings()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+fun DefaultPreview() {
+    BasicsCodelabTheme {
+        MyApp()
     }
 }
